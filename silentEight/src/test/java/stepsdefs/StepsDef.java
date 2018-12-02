@@ -11,14 +11,8 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-/*@RunWith(Cucumber.class)
-@CucumberOptions(
-        features = {"classpath:features"},
-        plugin = {"pretty", "html:target/cucumber-html-report"},
-        tags = {"@Second"},
-        glue={"src/test/resources"},
-        monochrome = true
-)*/
+import java.util.concurrent.TimeUnit;
+
 public class StepsDef {
 
     private static WebDriver driver;
@@ -27,6 +21,7 @@ public class StepsDef {
     public void before() {
         System.setProperty("webdriver.chrome.driver", "C:/program_files/another_resources/chromedriver.exe");
         driver = new ChromeDriver();
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
     }
 
     @After
