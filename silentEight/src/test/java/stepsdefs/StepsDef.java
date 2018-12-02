@@ -10,15 +10,15 @@ import org.junit.Assert;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import pageObjects.DynamicObjects;
 import testFunctions.StepFunctions;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static pageObjects.SilentEightDecisionTrees.LIST_OF_DECISION_TREES;
+import static pageObjects.SilentEightDecisionTrees.*;
 import static pageObjects.SilentEightLoginPage.*;
-import static pageObjects.SilentEightSingleDecisionTree.BUTTON_EDIT_ASSIGNMENTS;
-import static pageObjects.SilentEightSingleDecisionTree.LIST_OF_DEACTIVATE_BUTTONS;
+import static pageObjects.SilentEightSingleDecisionTree.*;
 
 public class StepsDef {
 
@@ -54,30 +54,65 @@ public class StepsDef {
 
     @And("^Open first available decision tree for (\\d+) times$")
     public void openFirstAvailableDecisionTreeForTimes(int times) {
-        List<WebElement> listOfTrees = sf.getListOfElementsByXpath(driver, LIST_OF_DECISION_TREES.getXpath());
-        Assert.assertTrue("There is no decision trees to open", listOfTrees.size() > 0);
-        int i = 0;
-        while (i < times) {
-            i++;
-            try {
-                sf.click(driver, LIST_OF_DECISION_TREES.getXpath());
-                break;
-            } catch (Exception e) {
-                System.out.println("Failed to open first from list decision tree page - try " + i + " of " + times);
+        List<WebElement> listOfTrees = sf.getListOfElementsByXpath(driver, LIST_OF_AVAILABLE_DECISION_TREES.getXpath());
+        Assert.assertTrue("There is no available decision trees to open", listOfTrees.size() > 0);
+        sf.clickElementWithWait(driver, LIST_OF_AVAILABLE_DECISION_TREES, times);
+    }
+
+    @And("^Open edit assignments window$")
+    public void editAssignments() {
+        sf.click(driver, BUTTON_EDIT_ASSIGNMENTS);
+        sf.hardCodedWait(1);
+    }
+
+    @And("^assign \"([^\"]*)\" as ([^\"]*)")
+    public void assignAsAvailable(String key, String batch) {
+        Assert.assertTrue("No such an element on the list", sf.getListOfElementsByXpath(driver, DynamicObjects.getXPathOfEditAssignmentsItem(key)).size() > 0);
+        String currentBatch = sf.getElementByXpath(driver, DynamicObjects.getXPathOfEditAssignmentsSectionTitle(key)).getText();
+        if (batch.equals("Available")) {
+            if (currentBatch.equals("Assigned")) {
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "remove"));
+            } else if (currentBatch.equals("Active")) {
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "deactivate"));
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "remove"));
             }
-            sf.hardCodedWait(1);
+        } else if (batch.equals("Assigned")) {
+            if (currentBatch.equals("Available")) {
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "add"));
+            } else if (currentBatch.equals("Active")) {
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "deactivate"));
+            }
+        } else {
+            if (currentBatch.equals("Available")) {
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "add"));
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "activate"));
+            } else if (currentBatch.equals("Assigned")) {
+                sf.click(driver, DynamicObjects.getXPathOfEditAssignmentsActionButtonForKey(key, "activate"));
+            }
         }
     }
 
-    @And("^edit assignments$")
-    public void editAssignments() {
-        sf.click(driver, BUTTON_EDIT_ASSIGNMENTS);
+    @Then("^check error message$")
+    public void checkErrorMessage() {
+        sf.click(driver, BUTTON_SAVE_EDIT_ASSIGNMENTS);
+
+        //Expected results view is attached in file: src\test\resources\Capture.PNG
+        // Test expects to met an error, because it tries to activate items already activated.
+
+        Assert.assertTrue("Something went not as expected, please, check this test", sf.getListOfElementsByXpath(driver, ERROR_MESSAGE_AFTER_EDIT_ASSIGNMENTS.getXpath()).size() > 0);
     }
 
-    @Then("^count deactivate buttons$")
-    public void countDeactivateButtons() {
-        List<WebElement> listOfButtons = sf.getListOfElementsByXpath(driver, LIST_OF_DEACTIVATE_BUTTONS.getXpath());
-        Assert.assertTrue("There is no deactivate buttons", listOfButtons.size() > 0);
-        System.out.println(listOfButtons.size());
+    @And("^copy decision tree in use if there is none in available section$")
+    public void copyDecisionTreeInUseIfThereIsNoneInAvailableSection() {
+        List<WebElement> listOfTrees = sf.getListOfElementsByXpath(driver, LIST_OF_DECISION_TREES_IN_USE.getXpath());
+        Assert.assertTrue("There is no decision trees in use to copy", listOfTrees.size() > 0);
+        if (sf.getListOfElementsByXpath(driver, LIST_OF_AVAILABLE_DECISION_TREES.getXpath()).size() == 0) {
+            sf.clickElementWithWait(driver, COPY_DECISION_TREE_IN_USE, 5);
+            String name = sf.getElementByXpath(driver, NAME_OF_DECISION_TREE_TO_COPY.getXpath()).getText();
+            name = name.substring(1, name.length() - 2) + " - copy";
+            sf.sendString(driver, NAME_OF_NEW_COPY_OF_DECISION_TREE, name);
+            sf.click(driver, SUBMIT_COPYING_PROCESS_BUTTON);
+        }
+
     }
 }

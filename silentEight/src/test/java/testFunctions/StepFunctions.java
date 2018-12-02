@@ -32,4 +32,22 @@ public class StepFunctions {
             e.printStackTrace();
         }
     }
+
+    public WebElement getElementByXpath(WebDriver driver, String xPath) {
+        return driver.findElement(By.xpath(xPath));
+    }
+
+    public void clickElementWithWait(WebDriver driver, PageObject po, int times) {
+        int i = 0;
+        while (i < times) {
+            i++;
+            try {
+                click(driver, po.getXpath());
+                break;
+            } catch (Exception e) {
+                System.out.println("Failed to open first from list decision tree page - try " + i + " of " + times);
+            }
+            hardCodedWait(1);
+        }
+    }
 }
