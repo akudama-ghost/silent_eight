@@ -52,11 +52,11 @@ public class StepsDef {
         sf.click(driver, INPUT_SUBMIT);
     }
 
-    @And("^Open first available decision tree for (\\d+) times$")
-    public void openFirstAvailableDecisionTreeForTimes(int times) {
+    @And("^Open first available decision tree$")
+    public void openFirstAvailableDecisionTreeForTimes() {
         List<WebElement> listOfTrees = sf.getListOfElementsByXpath(driver, LIST_OF_AVAILABLE_DECISION_TREES.getXpath());
         Assert.assertTrue("There is no available decision trees to open", listOfTrees.size() > 0);
-        sf.clickElementWithWait(driver, LIST_OF_AVAILABLE_DECISION_TREES, times);
+        sf.clickElementWithWait(driver, LIST_OF_AVAILABLE_DECISION_TREES, 5);
     }
 
     @And("^Open edit assignments window$")
